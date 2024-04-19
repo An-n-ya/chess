@@ -7,12 +7,14 @@ use crate::{
 
 pub struct Layout {
     pub board: [[Option<Chessman>; 9]; 10],
+    mode: ChessDisplayMode,
 }
 
 impl Layout {
     pub fn new() -> Self {
         Self {
             board: [[None; 9]; 10],
+            mode: ChessDisplayMode::Character,
         }
     }
 }
@@ -38,7 +40,10 @@ impl fmt::Display for Layout {
                     let y = j / 2;
                     if let Some(c) = self.board[y][x] {
                         has_chessman = true;
-                        write!(f, "{}", c.to_string(ChessDisplayMode::Character)).unwrap();
+                        write!(f, "{}", c.to_string(self.mode)).unwrap();
+                        if self.mode == ChessDisplayMode::Unicode {
+                            write!(f, " ").unwrap();
+                        }
                     } else {
                         write!(f, "{}", board[j].chars().nth(i).unwrap()).unwrap();
                     }

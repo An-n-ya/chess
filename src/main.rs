@@ -1,10 +1,7 @@
-use std::collections::HashMap;
-
 mod chessman;
 mod constants;
 mod layout;
 
-use constants::BOARD;
 use layout::Layout;
 struct Chess {
     round: usize,
@@ -16,11 +13,6 @@ struct Chess {
 enum Turn {
     Red,
     Black,
-}
-
-struct ChessmanMap {
-    red: HashMap<String, String>,
-    black: HashMap<String, String>,
 }
 
 impl Chess {
