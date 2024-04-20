@@ -3,6 +3,7 @@ use core::fmt;
 use crate::{
     chessman::{ChessDisplayMode, Chessman},
     constants::BOARD,
+    input::Move,
 };
 
 pub struct Layout {
@@ -16,6 +17,39 @@ impl Layout {
             board: [[None; 9]; 10],
             mode: ChessDisplayMode::Character,
         }
+    }
+    pub fn find_chessman_at_column(
+        &self,
+        chessman: &Chessman,
+        column: &usize,
+    ) -> Option<(usize, usize)> {
+        for line in 0..10 {
+            if let Some(c) = self.board[line][*column] {
+                if c == *chessman {
+                    return Some((*column, line));
+                }
+            }
+        }
+        None
+    }
+
+    pub fn handle_move(&mut self, m: &Move) {
+        let position = self.get_mut(m.from.1, m.from.0);
+        if position.is_none() {
+            // FIXME: find a better way to print coordinate
+            panic!("cannot find chessman on position {:?}", m.from);
+        }
+        let chessman = position.clone().unwrap();
+        *position = None;
+        let position = self.get_mut(m.to.1, m.to.0);
+        *position = Some(chessman);
+    }
+
+    pub fn get(&self, line: usize, column: usize) -> Option<Chessman> {
+        self.board[line][column]
+    }
+    pub fn get_mut(&mut self, line: usize, column: usize) -> &mut Option<Chessman> {
+        &mut self.board[line][column]
     }
 }
 

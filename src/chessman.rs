@@ -1,4 +1,4 @@
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Chessman {
     KingRed,
     AdvisorRed,
@@ -59,6 +59,31 @@ impl Chessman {
         };
         c.to_string()
     }
+
+    pub fn into_red(&mut self) {
+        *self = match self.clone() {
+            Chessman::KingBlack => Chessman::KingRed,
+            Chessman::AdvisorBlack => Chessman::AdvisorRed,
+            Chessman::ElephantBlack => Chessman::ElephantRed,
+            Chessman::HorseBlack => Chessman::HorseRed,
+            Chessman::RookBlack => Chessman::RookRed,
+            Chessman::CannonBlack => Chessman::CannonRed,
+            Chessman::PawnBlack => Chessman::PawnRed,
+            v @ _ => v,
+        }
+    }
+    pub fn into_black(&mut self) {
+        *self = match self.clone() {
+            Chessman::KingRed => Chessman::KingBlack,
+            Chessman::AdvisorRed => Chessman::AdvisorBlack,
+            Chessman::ElephantRed => Chessman::ElephantBlack,
+            Chessman::HorseRed => Chessman::HorseBlack,
+            Chessman::RookRed => Chessman::RookBlack,
+            Chessman::CannonRed => Chessman::CannonBlack,
+            Chessman::PawnRed => Chessman::PawnBlack,
+            v @ _ => v,
+        }
+    }
 }
 
 impl From<char> for Chessman {
@@ -66,22 +91,34 @@ impl From<char> for Chessman {
         match value {
             'k' => Chessman::KingBlack,
             'K' => Chessman::KingRed,
+            '将' => Chessman::KingRed,
+            '帅' => Chessman::KingRed,
             'a' => Chessman::AdvisorBlack,
             'A' => Chessman::AdvisorRed,
+            '士' => Chessman::AdvisorRed,
+            '仕' => Chessman::AdvisorRed,
             'e' => Chessman::ElephantBlack,
             'E' => Chessman::ElephantRed,
             'b' => Chessman::ElephantBlack,
             'B' => Chessman::ElephantRed,
+            '相' => Chessman::ElephantRed,
+            '象' => Chessman::ElephantRed,
             'n' => Chessman::HorseBlack,
             'N' => Chessman::HorseRed,
             'h' => Chessman::HorseBlack,
             'H' => Chessman::HorseRed,
+            '马' => Chessman::HorseRed,
             'r' => Chessman::RookBlack,
             'R' => Chessman::RookRed,
+            '车' => Chessman::RookRed,
             'c' => Chessman::CannonBlack,
             'C' => Chessman::CannonRed,
+            '炮' => Chessman::CannonRed,
+            '砲' => Chessman::CannonRed,
             'p' => Chessman::PawnBlack,
             'P' => Chessman::PawnRed,
+            '卒' => Chessman::PawnRed,
+            '兵' => Chessman::PawnRed,
             _ => panic!("unsupported chess character {value}"),
         }
     }

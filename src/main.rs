@@ -1,13 +1,16 @@
 mod chessman;
 mod constants;
+mod input;
 mod layout;
 
+use input::Input;
 use layout::Layout;
 struct Chess {
     round: usize,
     peace_round: usize,
     turn: Turn,
     layout: Layout,
+    input: Input,
 }
 
 enum Turn {
@@ -17,12 +20,15 @@ enum Turn {
 
 impl Chess {
     pub fn new() -> Self {
-        Self {
+        let mut chess = Self {
             round: 0,
             peace_round: 0,
             turn: Turn::Red,
             layout: Layout::new(),
-        }
+            input: Input::new(),
+        };
+        chess.parse_fen("rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR w - - 0 1");
+        chess
     }
 
     pub fn parse_fen(&mut self, input: &str) {
@@ -64,9 +70,17 @@ impl Chess {
     pub fn render(&self) {
         println!("{}", self.layout);
     }
+
+    pub fn run(&mut self) {
+        loop {
+            let m = self.input.get(&self.layout);
+            self.layout.handle_move(&m);
+            self.render();
+        }
+    }
 }
 fn main() {
     let mut chess = Chess::new();
-    chess.parse_fen("rnbakabnr/9/1c5c1/p1p1p1p2/8p/8P/P1P1P1P2/1C5C1/9/RNBAKABNR w - - 0 1");
     chess.render();
+    chess.run();
 }
