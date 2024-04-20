@@ -73,14 +73,48 @@ impl Chess {
 
     pub fn run(&mut self) {
         loop {
-            let m = self.input.get(&self.layout);
+            let m = self.input.get_move(&self.layout);
             self.layout.handle_move(&m);
             self.render();
         }
+    }
+
+    fn test_run(&mut self, scripts: &[&str]) {
+        for input in scripts {
+            let m = self
+                .input
+                .parse_input(input, &self.layout)
+                .expect(&format!("cannot handle {}", input));
+            println!("handling {}, ucci: {}", input, m);
+            self.layout.handle_move(&m);
+        }
+        self.render();
     }
 }
 fn main() {
     let mut chess = Chess::new();
     chess.render();
     chess.run();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_classic_interpolate() {
+        let input = [
+            "炮二平五",
+            "炮8平5",
+            "炮五进四",
+            "士4进5",
+            "马二进三",
+            "马8进7",
+            "炮八平五",
+            "马2进3",
+        ];
+        let mut chess = Chess::new();
+        chess.test_run(&input);
+        panic!()
+    }
 }

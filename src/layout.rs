@@ -12,6 +12,8 @@ pub struct Layout {
 }
 
 impl Layout {
+    const HEIGHT: usize = 10;
+    const WIDTH: usize = 9;
     pub fn new() -> Self {
         Self {
             board: [[None; 9]; 10],
@@ -45,6 +47,206 @@ impl Layout {
         *position = Some(chessman);
     }
 
+    pub fn is_valid_move(&self, m: &Move) -> bool {
+        let chessman = self
+            .get_at(m.from)
+            .expect(&format!("cannot find a chessman at position {:?}", m.from));
+        let from = m.from;
+        let to = m.to;
+        let position = self.get_at(m.to);
+        if let Some(c) = position {
+            if !chessman.is_different_color(&c) {
+                return false;
+            }
+        }
+        if chessman.is_pawn() {
+            if chessman.is_cross_river(&from) {
+                if chessman.is_move_backward(m) {
+                    return false;
+                }
+            } else {
+                if chessman.is_move_horizontally(m) || chessman.is_move_backward(m) {
+                    return false;
+                }
+            }
+            if !chessman.is_move_one_step(m) {
+                return false;
+            }
+        } else if chessman.is_cannon() {
+            let move_in_horizontal = from.1.abs_diff(to.1);
+            let move_in_vertical = from.0.abs_diff(to.0);
+            if move_in_horizontal != 0 && move_in_vertical != 0 {
+                return false;
+            }
+            let bypass_num = self.get_bypass_chessman_num(m);
+            if bypass_num != 0 && bypass_num != 2 {
+                return false;
+            }
+        } else if chessman.is_rook() {
+            let move_in_horizontal = from.1.abs_diff(to.1);
+            let move_in_vertical = from.0.abs_diff(to.0);
+            if move_in_horizontal != 0 && move_in_vertical != 0 {
+                return false;
+            }
+            if self.get_bypass_chessman_num(m) > 1 {
+                return false;
+            }
+        } else if chessman.is_horse() {
+            let move_in_horizontal = from.1.abs_diff(to.1);
+            let move_in_vertical = from.0.abs_diff(to.0);
+            if !((move_in_horizontal == 1 && move_in_vertical == 2)
+                || (move_in_horizontal == 2 && move_in_vertical == 1))
+            {
+                return false;
+            }
+            if move_in_horizontal == 2 {
+                if chessman.is_move_backward(m) {
+                    let back_position = self.get_back_of_chessman(from, &chessman);
+                    if back_position.is_some() {
+                        return false;
+                    }
+                } else if chessman.is_move_forward(m) {
+                    let front_position = self.get_front_of_chessman(from, &chessman);
+                    if front_position.is_some() {
+                        return false;
+                    }
+                }
+            } else if move_in_horizontal == 1 {
+                if chessman.is_move_left(m) {
+                    let position = self.get_left_of_chessman(from, &chessman);
+                    if position.is_some() {
+                        return false;
+                    }
+                } else if chessman.is_move_right(m) {
+                    let position = self.get_right_of_chessman(from, &chessman);
+                    if position.is_some() {
+                        return false;
+                    }
+                }
+            }
+        } else if chessman.is_elephant() {
+            let move_in_horizontal = from.1 as i8 - to.1 as i8;
+            let move_in_vertical = from.0 as i8 - to.0 as i8;
+            if move_in_horizontal.abs() != 2 || move_in_vertical.abs() != 2 {
+                return false;
+            }
+            let n_cor = (
+                from.0 as i8 + move_in_horizontal / 2,
+                from.1 as i8 + move_in_vertical / 2,
+            );
+            if !Self::is_valid_coordinate(&n_cor) {
+                return false;
+            }
+            let n_cor = (n_cor.0 as usize, n_cor.1 as usize);
+            let position = self.get_at(n_cor);
+            if position.is_some() {
+                return false;
+            }
+        } else if chessman.is_advisor() {
+            if !chessman.is_in_palace(&to) {
+                return false;
+            }
+            let move_in_horizontal = from.1.abs_diff(to.1);
+            let move_in_vertical = from.0.abs_diff(to.0);
+            if move_in_horizontal != 1 || move_in_vertical != 1 {
+                return false;
+            }
+        } else if chessman.is_king() {
+            if !chessman.is_in_palace(&to) {
+                return false;
+            }
+            if !chessman.is_move_one_step(m) {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn is_valid_coordinate(coordinate: &(i8, i8)) -> bool {
+        coordinate.0 >= 0
+            && coordinate.0 < Self::WIDTH as i8
+            && coordinate.1 >= 0
+            && coordinate.1 < Self::HEIGHT as i8
+    }
+
+    fn get_bypass_chessman_num(&self, m: &Move) -> usize {
+        let mut res = 0;
+        let i = m.from.0;
+        for j in m.from.1 + 1..=m.to.1 {
+            if self.get(j, i).is_some() {
+                res += 1;
+            }
+        }
+        let j = m.from.1;
+        for i in m.from.0 + 1..=m.to.0 {
+            if self.get(j, i).is_some() {
+                res += 1;
+            }
+        }
+        res
+    }
+
+    fn get_right_of_chessman(
+        &self,
+        coordinate: (usize, usize),
+        chessman: &Chessman,
+    ) -> Option<Chessman> {
+        self.get_left_of_chessman(coordinate, &chessman.change_color())
+    }
+    fn get_left_of_chessman(
+        &self,
+        coordinate: (usize, usize),
+        chessman: &Chessman,
+    ) -> Option<Chessman> {
+        let col = coordinate.0;
+        if chessman.is_red() {
+            if col == 0 {
+                Some(Chessman::BOARD)
+            } else {
+                self.get_at((coordinate.0 - 1, coordinate.1))
+            }
+        } else {
+            if col == Self::WIDTH - 1 {
+                Some(Chessman::BOARD)
+            } else {
+                self.get_at((coordinate.0 + 1, coordinate.1))
+            }
+        }
+    }
+    fn get_back_of_chessman(
+        &self,
+        coordinate: (usize, usize),
+        chessman: &Chessman,
+    ) -> Option<Chessman> {
+        self.get_front_of_chessman(coordinate, &chessman.change_color())
+    }
+    fn get_front_of_chessman(
+        &self,
+        coordinate: (usize, usize),
+        chessman: &Chessman,
+    ) -> Option<Chessman> {
+        let line = coordinate.1;
+        if chessman.is_red() {
+            if line == 0 {
+                Some(Chessman::BOARD)
+            } else {
+                self.get_at((coordinate.0, line - 1))
+            }
+        } else {
+            if line == Self::HEIGHT - 1 {
+                Some(Chessman::BOARD)
+            } else {
+                self.get_at((coordinate.0, line + 1))
+            }
+        }
+    }
+
+    pub fn get_mut_at(&mut self, coordinate: (usize, usize)) -> &mut Option<Chessman> {
+        self.get_mut(coordinate.1, coordinate.0)
+    }
+    pub fn get_at(&self, coordinate: (usize, usize)) -> Option<Chessman> {
+        self.get(coordinate.1, coordinate.0)
+    }
     pub fn get(&self, line: usize, column: usize) -> Option<Chessman> {
         self.board[line][column]
     }
