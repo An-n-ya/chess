@@ -48,6 +48,56 @@ impl Input {
         }
     }
 
+    fn find_chessman(chars: &[char], layout: &Layout) -> Option<(Chessman, (usize, usize))> {
+        assert!(chars.len() == 2);
+        if chars[0] == '前' || chars[0] == '后' || chars[0] == '中' {
+            let chessman: Chessman = chars[1].into();
+            if let Some(coordinates) = layout.find_chessman(&chessman) {
+                let size = coordinates.len();
+                if !(size == 2 || size == 3) {
+                    return None;
+                }
+                let index = if size == 2 {
+                    if chars[0] == '前' {
+                        0
+                    } else if chars[0] == '后' {
+                        1
+                    } else {
+                        unreachable!()
+                    }
+                } else if size == 3 {
+                    if chars[0] == '前' {
+                        0
+                    } else if chars[0] == '中' {
+                        1
+                    } else if chars[0] == '后' {
+                        2
+                    } else {
+                        unreachable!()
+                    }
+                } else {
+                    unreachable!()
+                };
+                Some((chessman, coordinates[index]))
+            } else {
+                None
+            }
+        } else {
+            let mut chessman: Chessman = chars[0].into();
+            if chars[1].is_numeric() {
+                chessman.into_black();
+            } else if Self::C_NUMBER.contains(&chars[1]) {
+                chessman.into_red();
+            }
+            let column = Self::classic_to_coordinate(&chars[1]);
+            if let Some(from) = layout.find_chessman_at_column(&chessman, &column) {
+                Some((chessman, from))
+            } else {
+                None
+            }
+        }
+    }
+
     pub fn parse_input(&self, input: &str, layout: &Layout) -> Option<Move> {
         match self.mode {
             InputMode::Classic => {
@@ -56,14 +106,7 @@ impl Input {
                     eprintln!("input len is not equal to 4, got {}", chars.len());
                     return None;
                 }
-                let mut chessman: Chessman = chars[0].into();
-                if chars[1].is_numeric() {
-                    chessman.into_black();
-                } else if Self::C_NUMBER.contains(&chars[1]) {
-                    chessman.into_red();
-                }
-                let column = Self::classic_to_coordinate(&chars[1]);
-                if let Some(from) = layout.find_chessman_at_column(&chessman, &column) {
+                if let Some((chessman, from)) = Self::find_chessman(&chars[..2], layout) {
                     let n = Self::classic_to_number(&chars[3]);
                     let to = if chars[2] == '平' {
                         let n = Self::classic_to_coordinate(&chars[3]);
@@ -121,7 +164,7 @@ impl Input {
                         return None;
                     }
                 } else {
-                    eprintln!("cannot find chessman {:?} at column {}", chessman, column);
+                    eprintln!("cannot find chessman {:?}", &chars[..2]);
                     return None;
                 }
             }

@@ -112,9 +112,15 @@ mod tests {
             "马8进7",
             "炮八平五",
             "马2进3",
+            "前炮退二",
+            "车9平8",
         ];
         let mut chess = Chess::new();
         chess.test_run(&input);
-        panic!()
+        let fen = chess.layout.to_fen_string();
+        assert_eq!(
+            fen,
+            "r1b1kabr1/4a4/1cn1c1n2/p1p3p1p/9/4C4/P1P1P1P1P/4C1N2/9/RNBAKAB1R"
+        );
     }
 }

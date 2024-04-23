@@ -65,6 +65,26 @@ impl Chessman {
         c.to_string()
     }
 
+    pub fn to_fen_char(&self) -> char {
+        match self {
+            Chessman::KingBlack => 'k',
+            Chessman::AdvisorBlack => 'a',
+            Chessman::ElephantBlack => 'b',
+            Chessman::HorseBlack => 'n',
+            Chessman::RookBlack => 'r',
+            Chessman::CannonBlack => 'c',
+            Chessman::PawnBlack => 'p',
+            Chessman::KingRed => 'K',
+            Chessman::AdvisorRed => 'A',
+            Chessman::ElephantRed => 'B',
+            Chessman::HorseRed => 'N',
+            Chessman::RookRed => 'R',
+            Chessman::CannonRed => 'C',
+            Chessman::PawnRed => 'P',
+            Chessman::BOARD => ' ',
+        }
+    }
+
     pub fn into_red(&mut self) {
         *self = match self.clone() {
             Chessman::KingBlack => Chessman::KingRed,

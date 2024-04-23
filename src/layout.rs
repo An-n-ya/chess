@@ -34,6 +34,45 @@ impl Layout {
         }
         None
     }
+    pub fn find_chessman(&self, chessman: &Chessman) -> Option<Vec<(usize, usize)>> {
+        let mut res = vec![];
+        for line in 0..10 {
+            for col in 0..9 {
+                if let Some(c) = self.board[line][col] {
+                    if c == *chessman {
+                        res.push((col, line));
+                    }
+                }
+            }
+        }
+        Some(res)
+    }
+
+    pub fn to_fen_string(&self) -> String {
+        let mut res = "".to_string();
+        let mut cnt = 0u8;
+        for line in 0..10 {
+            for col in 0..9 {
+                if let Some(c) = self.board[line][col] {
+                    if cnt != 0 {
+                        res.push((0x30 + cnt) as char);
+                        cnt = 0;
+                    }
+                    res.push(c.to_fen_char());
+                } else {
+                    cnt += 1;
+                }
+            }
+            if cnt != 0 {
+                res.push((0x30 + cnt) as char);
+                cnt = 0;
+            }
+            if line != 9 {
+                res.push('/');
+            }
+        }
+        res
+    }
 
     pub fn handle_move(&mut self, m: &Move) {
         let position = self.get_mut(m.from.1, m.from.0);
